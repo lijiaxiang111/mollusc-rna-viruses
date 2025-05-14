@@ -1,0 +1,85 @@
+library(ggplot2)
+library(gggenes)
+library(readr)
+library(dplyr)
+library(stringr)
+
+# 读取数据
+data_path <- "E:/博士生工作/病毒实验室/analyze/mollusca_transcriptomic/genemap/genemap.csv"
+gene_tbl <- read_delim(data_path, delim = ",", trim_ws = TRUE, show_col_types = FALSE)
+
+gene_tbl <- gene_tbl %>%
+        mutate(forward = ifelse(strand == "-", -1, 1)) %>%
+        mutate(xmin = pmin(start, stop),
+               xmax = pmax(start, stop),
+               feature_label = paste0(feature_id, " (", classified, ")"),
+               module_class = case_when(
+                       grepl("RdRP", module_type, ignore.case = TRUE) ~ "RdRP",
+                       grepl("capsid|coat|VP", module_type, ignore.case = TRUE) ~ "Structural proteins",
+                       grepl("protease|IgA", module_type, ignore.case = TRUE) ~ "Proteases",
+                       grepl("helicase", module_type, ignore.case = TRUE) ~ "RNA helicases",
+                       grepl("methyltransferase|Vmethyltransf", module_type, ignore.case = TRUE) ~ "Capping enzymes",
+                       grepl("NUDIX|Macro|HAM1|DEDDh|Rhv|STKc", module_type, ignore.case = TRUE) ~ "Novel domains",
+                       TRUE ~ "Misc."
+               ))
+
+module_colors <- c(
+        "RdRP" = "#4DBBD5", 
+        "Structural proteins" = "#EFC000",
+        "Proteases" = "#B24745",
+        "RNA helicases" = "#63B37B",
+        "Capping enzymes" = "#E18727",
+        "Misc." = "#939597",
+        "Novel domains" = "#D62728"
+)
+
+gene_tbl <- gene_tbl %>%
+        mutate(feature_label = factor(feature_label, 
+                                      levels = gene_tbl %>%
+                                              distinct(feature_label, contig_length) %>%
+                                              arrange(-contig_length) %>% pull(feature_label)))
+
+# 背景 contig
+gene_bg <- gene_tbl %>%
+        group_by(feature_label) %>%
+        summarise(xmin = 0, xmax = max(contig_length)) %>%
+        mutate(y = factor(feature_label, levels = levels(gene_tbl$feature_label)))
+
+# 绘图
+p <- ggplot() +
+        # 背景 contig (加粗版，height = 0.6)
+        geom_gene_arrow(data = gene_bg,
+                        aes(xmin = xmin, xmax = xmax, y = y),
+                        height = 0.6,
+                        fill = "grey95", color = NA) +
+        
+        # 基因箭头 (适中版，height = 0.4)
+        geom_gene_arrow(data = gene_tbl, 
+                        aes(xmin = xmin, xmax = xmax, y = feature_label, forward = forward, fill = module_class),
+                        height = 0.4,
+                        arrowhead_height = unit(2, "mm"), arrowhead_width = unit(1.5, "mm"),
+                        color = "black", size = 0.2) +
+        
+        # 基因名称
+        geom_text(data = gene_tbl,
+                  aes(x = (xmin + xmax) / 2, y = feature_label, label = Mix_Function),
+                  size = 3, vjust = -0.8, color = "black") +
+        
+        scale_fill_manual(values = module_colors, name = "Module") +
+        scale_x_continuous(expand = c(0, 0), name = "Contig length (nt.)") +
+        scale_y_discrete(name = NULL) +
+        
+        theme_minimal(base_size = 13) +
+        theme(
+                panel.grid = element_blank(),
+                axis.line.x = element_line(color = "black", size = 0.6),
+                axis.ticks.x = element_line(color = "black", size = 0.6),
+                legend.position = "right",
+                axis.text.y = element_text(size = 10)
+        )
+
+print(p)
+
+# 导出最终版本
+ggsave("E:/博士生工作/病毒实验室/analyze/mollusca_transcriptomic/genemap/virus_gene_map_FINAL_TRACK_STYLE.pdf", p, width = 14, height = 8)
+ggsave("E:/博士生工作/病毒实验室/analyze/mollusca_transcriptomic/genemap/virus_gene_map_FINAL_TRACK_STYLE.png", p, width = 14, height = 8, dpi = 600)
