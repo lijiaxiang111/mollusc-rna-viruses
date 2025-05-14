@@ -5,7 +5,7 @@ library(dplyr)
 library(stringr)
 
 # 读取数据
-data_path <- "E:/博士生工作/病毒实验室/analyze/mollusca_transcriptomic/genemap/genemap.csv"
+data_path <- "genemap.csv"
 gene_tbl <- read_delim(data_path, delim = ",", trim_ws = TRUE, show_col_types = FALSE)
 
 gene_tbl <- gene_tbl %>%
@@ -81,5 +81,4 @@ p <- ggplot() +
 print(p)
 
 # 导出最终版本
-ggsave("E:/博士生工作/病毒实验室/analyze/mollusca_transcriptomic/genemap/virus_gene_map_FINAL_TRACK_STYLE.pdf", p, width = 14, height = 8)
-ggsave("E:/博士生工作/病毒实验室/analyze/mollusca_transcriptomic/genemap/virus_gene_map_FINAL_TRACK_STYLE.png", p, width = 14, height = 8, dpi = 600)
+ggsave("virus_gene_map_FINAL_TRACK_STYLE.pdf", p, width = 14, height = 8)
