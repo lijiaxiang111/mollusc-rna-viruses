@@ -1,7 +1,7 @@
 # -----------------------------
 # ✅ 参数设置
-tree_file <- "E:/博士生工作/病毒实验室/analyze/mollusca_transcriptomic/tree/tree_no_RT.newick"        # 输入树文件
-output_dir <- "E:/博士生工作/病毒实验室/analyze/mollusca_transcriptomic/tree/subtree_iqtree"          # 输出目录
+tree_file <- "tree_no_RT.newick"        # 输入树文件
+output_dir <- "subtree_iqtree"          # 输出目录
 cut_height <- 2.5                        # 切割高度阈值
 min_size <- 1                            # 子树最小 cluster 数
 # -----------------------------
